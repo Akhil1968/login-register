@@ -1,11 +1,7 @@
-# a node.js application using -
-express.js, handlebars, bcryptjs and bootstrap
+# A node.js application using - bcryptjs 
 
-it explains the following :----
-   Middleware- body-parser
-   Middleware- static
-   Middleware- express-session
-   Middleare-  Template Engine Handlebars
-   decorating html FORM using bootstrap
+Highlight of the application  : password hashing by bcryptjs
+
+Other technologies used: expressJS, MongoDB, Mongoose, handlebars
 
 

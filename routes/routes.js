@@ -1,50 +1,63 @@
 var mongoose = require( 'mongoose' );
-var User = mongoose.model( 'User' );
+var UserModel = mongoose.model( 'UserModel' );
 var bcrypt = require('bcryptjs');
 
-exports.loginPageHandler = function (req, res){
+exports.loginHandler = function (req, res){
+	console.log("Inside loginHandler");
+	res.render('login.handlebars', {});
+};//loginHandler
+
+exports.logoutHandler = function (req, res){
+	console.log("Inside logoutHandler");
 	req.session.destroy();
 	res.render('login.handlebars', {});
-};//loginPageHandler
+};//logoutHandler
 
-exports.landingPageHandler = function (req, res){
+exports.authHandler = function (req, res){
 	var nmReq = req.body.nm;
 	var pwdReq = req.body.pwd;
 	var loginOutcome;
-
-	mongoose.model('User').findOne({username:nmReq}, function(err, userObj){
+	console.log( "Inside authHandler--> Login=%s, Password=%s", nmReq, pwdReq);
+	mongoose.model('UserModel').findOne({username:nmReq}, function(err, userObj){
 	    if(userObj === null){
 	     	loginOutcome = "Login Failed: User name does not exist in db";
-	     	res.render('landingpage.handlebars', {welcomeMessage:loginOutcome});
+	     	res.render('login.handlebars', {errorMessage:loginOutcome});
 	    } else {  //userObj is Not NULL
+
+			console.log( "Password [%s] being matched with hashed password [%s] using bcrypt.compare", 
+						pwdReq, userObj.password);
 	    	bcrypt.compare(pwdReq, userObj.password, function(errCompare, isMatch) {
 		        if (errCompare) {
 		        	loginOutcome = "Login Failed : bcrypt.comare yielded error" ;
+					res.render('login.handlebars', {errorMessage:loginOutcome});
 		        }else if (isMatch === true){
 					loginOutcome = "Login successful";
+					res.render('landingpage.handlebars', {MSG:loginOutcome});
 				} else{
 					loginOutcome = "Login Failed: Password did not match";
-			}
-		console.log( "Login Name %s, Password %s. Login outcome [%s]", nmReq, pwdReq, loginOutcome);
-		res.render('landingpage.handlebars', {welcomeMessage:loginOutcome});
-		});// bcrypt.compare assynch
-	    }//userObj is Not NULL
+					res.render('login.handlebars', {errorMessage:loginOutcome});
+				}
+				console.log( "Login outcome [%s]", loginOutcome);
+				
+			});// bcrypt.compare assynch
+	   }//userObj is Not NULL
 	});//findOne
-}; //landingPageHandler
+}; //authHandler
 
 
 exports.registerFormHandler = function(req, res){
-   res.render("register", {});
+   console.log("Inside registerFormHandler");
+   res.render("register.handlebars", {});
 }; //registerFormHandler
 
-exports.registerUserHandler = function(req, res){
+exports.registerSubmitHandler = function(req, res){
+   console.log("Inside registerSubmitHandler");
+	
    var usernameReq = req.body.username;
-   var emailReq = req.body.email;
    var passwordReq = req.body.password;
 
-   var newuser = new User();
+   var newuser = new UserModel();
    newuser.username = usernameReq;
-   newuser.email = emailReq;
    newuser.password = passwordReq;
 
    //save to db through model
@@ -52,11 +65,11 @@ exports.registerUserHandler = function(req, res){
        if(err){
          var message = "A user already exists with that username or email";
          console.log(message);
-         res.render("register", {errorMessage:message});
+         res.render("register.handlebars", {errorMessage:message});
          return;
        }else{
          req.session.newuser = savedUser.username;
-         res.render('landingpage.handlebars', {welcomeMessage:"Registration succesful"});
+         res.render('landingpage.handlebars', {MSG:"Registration succesful"});
        }
    });
-};//registerUserHandler
+};//registerSubmitHandler
